@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prediksi Ujian Koperasi, E-Commerce & Literasi Finansial</title>
+  <!-- Memuat Tailwind CSS untuk tata letak responsif dan utilitas modern -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Memuat Google Fonts: Inter (judul/UI), JetBrains Mono (timer/skor/opsi pilihan ganda), dan Lora (teks pilihan jawaban agar berbeda dari font latar utama) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Memuat pustaka canvas-confetti via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            option: ['Lora', 'Georgia', 'serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Latar belakang halaman utama menggunakan gradasi lembut warm alabaster */
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at top left, #eef2ff 0%, #f8fafc 45%, #fefce8 100%);
+      color: #0f172a;
+      min-height: 100vh;
+    }
+
+    /* Gaya khusus tombol pilihan jawaban: warna latar belakang berbeda dari warna latar kartu/halaman dan font berbeda dari UI */
+    .option-btn {
+      font-family: 'Lora', Georgia, serif;
+      background-color: #f1f5f9;
+      border: 2px solid #cbd5e1;
+      color: #0f172a;
+      transition: all 0.18s ease;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background-color: #e0e7ff;
+      border-color: #6366f1;
+      transform: translateY(-1px);
+    }
+
+    /* Status jawaban benar: warna hijau kontras */
+    .option-correct {
+      background-color: #dcfce7 !important;
+      border-color: #16a34a !important;
+      color: #14532d !important;
+      font-weight: 600;
+    }
+
+    /* Status jawaban salah: warna merah kontras */
+    .option-wrong {
+      background-color: #fee2e2 !important;
+      border-color: #dc2626 !important;
+      color: #7f1d1d !important;
+      font-weight: 600;
+    }
+
+    /* Animasi muncul halus untuk transisi kartu */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-card {
+      animation: fadeSlideUp 0.28s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-indigo-200 selection:text-indigo-950">
+  <!-- Kontainer Utama Aplikasi -->
+  <div class="max-w-4xl mx-auto px-4 py-6 sm:py-10">
+    <!-- Header Utama Judul Kuis -->
+    <header class="text-center mb-6 sm:mb-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-100 text-indigo-800 text-xs sm:text-sm font-semibold tracking-wide mb-3">
+        <span>SIMULASI UJIAN MANDIRI</span>
+        <span>•</span>
+        <span>30 SOAL</span>
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        Prediksi Ujian Koperasi, E-Commerce &amp; Literasi Finansial
+      </h1>
+      <p class="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+        Latihan soal konseptual berbasis materi perkuliahan dengan pengacakan soal dan opsi, timer per soal, serta ulasan jawaban lengkap.
+      </p>
+    </header>
+
+    <!-- Area Notifikasi / Pesan Box (Pengganti alert) -->
+    <div id="messageBox" class="hidden mb-5 p-4 rounded-xl border text-sm font-medium transition-all" role="alert"></div>
+
+    <!-- HALAMAN 1: LAYAR PENGATURAN / MULAI KUIS -->
+    <section id="setupScreen" class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 sm:p-8 animate-card">
+      <div class="space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Pengaturan Sesi Kuis</h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Masukkan nama Anda dan pilih durasi waktu pengerjaan untuk setiap soal sebelum memulai.
+          </p>
+        </div>
+
+        <!-- Input Nama Pemain -->
+        <div>
+          <label for="playerNameInput" class="block text-sm font-semibold text-slate-700 mb-2">
+            Nama Pemain Kuis <span class="text-rose-600">*</span>
+          </label>
+          <input
+            type="text"
+            id="playerNameInput"
+            placeholder="Contoh: Nadia Pratama"
+            maxlength="60"
+            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+          />
+        </div>
+
+        <!-- Pilihan Durasi Waktu Per Soal -->
+        <div>
+          <span class="block text-sm font-semibold text-slate-700 mb-2">
+            Durasi Waktu Per Soal
+          </span>
+          <div class="grid grid-cols-3 gap-3 sm:gap-4" id="durationGroup">
+            <button
+              type="button"
+              data-duration="15"
+              class="duration-btn py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-semibold text-sm sm:text-base hover:border-indigo-400 transition cursor-pointer"
+            >
+              15 Detik
+            </button>
+            <button
+              type="button"
+              data-duration="30"
+              class="duration-btn py-3 px-4 rounded-xl border-2 border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold text-sm sm:text-base transition cursor-pointer"
+            >
+              30 Detik
+            </button>
+            <button
+              type="button"
+              data-duration="45"
+              class="duration-btn py-3 px-4 rounded-xl border-2 border-slate-200 bg-slate-50 text-slate-700 font-semibold text-sm sm:text-base hover:border-indigo-400 transition cursor-pointer"
+            >
+              45 Detik
+            </button>
+          </div>
+        </div>
+
+        <!-- Ringkasan Aturan Kuis -->
+        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 text-xs sm:text-sm text-amber-950 space-y-1.5">
+          <p class="font-bold">Ketentuan Kuis:</p>
+          <ul class="list-disc list-inside space-y-1 text-amber-900">
+            <li>Terdapat 30 soal pilihan ganda dengan urutan soal dan pilihan jawaban yang diacak setiap sesi.</li>
+            <li>Jika waktu habis sebelum menjawab, jawaban yang benar akan ditampilkan.</li>
+            <li>Skor akhir dihitung menggunakan rumus (jumlah benar dibagi total soal) dikali 100.</li>
+          </ul>
+        </div>
+
+        <!-- Tombol Mulai Kuis -->
+        <div class="pt-2">
+          <button
+            type="button"
+            id="startQuizBtn"
+            class="w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-base shadow-md shadow-indigo-200 transition cursor-pointer"
+          >
+            Mulai Kuis Sekarang
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HALAMAN 2: LAYAR PERMAINAN KUIS -->
+    <section id="quizScreen" class="hidden space-y-5 animate-card">
+      <!-- Panel Atas: Info Pemain, Nomor Soal, dan Hitungan Mundur Waktu -->
+      <div class="bg-white rounded-2xl shadow-md border border-slate-200/80 p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Peserta</p>
+            <p id="activePlayerDisplay" class="text-sm sm:text-base font-bold text-slate-800">-</p>
+          </div>
+
+          <div class="text-center">
+            <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Progres Soal</p>
+            <p id="questionCounterDisplay" class="text-sm sm:text-base font-bold text-indigo-700 font-mono">
+              Soal 1 / 30
+            </p>
+          </div>
+
+          <!-- Waktu Hitungan Mundur di Bagian Atas Soal -->
+          <div class="flex items-center gap-2.5 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-sm">
+            <span class="text-xs uppercase tracking-wider text-slate-300 font-semibold">Waktu</span>
+            <span id="timerDisplay" class="text-lg sm:text-xl font-bold font-mono text-emerald-400">
+              30s
+            </span>
+          </div>
+        </div>
+
+        <!-- Bar Progres Waktu -->
+        <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden mt-4">
+          <div id="timerBar" class="h-full bg-emerald-500 transition-all duration-300 rounded-full" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Kartu Pertanyaan & Pilihan Jawaban -->
+      <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-5 sm:p-7">
+        <div class="mb-2">
+          <span id="questionCategoryBadge" class="inline-block px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+            Topik
+          </span>
+        </div>
+
+        <h2 id="questionText" class="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed mb-6">
+          Teks pertanyaan akan muncul di sini...
+        </h2>
+
+        <!-- Daftar 4 Pilihan Jawaban -->
+        <div id="optionsContainer" class="grid grid-cols-1 gap-3.5"></div>
+
+        <!-- Umpan Balik Status Jawaban / Waktu Habis -->
+        <div id="feedbackBanner" class="hidden mt-6 p-4 rounded-xl border text-sm sm:text-base font-semibold"></div>
+
+        <!-- Tombol Navigasi Lanjut / Selesai -->
+        <div id="nextActionContainer" class="hidden mt-6 flex justify-end">
+          <button
+            type="button"
+            id="nextQuestionBtn"
+            class="py-3 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm sm:text-base shadow transition cursor-pointer"
+          >
+            Soal Berikutnya
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HALAMAN 3: LAYAR HASIL & REVIEW LENGKAP -->
+    <section id="resultScreen" class="hidden space-y-6 animate-card">
+      <!-- Kartu Ringkasan Skor -->
+      <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 sm:p-8 text-center">
+        <p class="text-xs uppercase tracking-widest font-bold text-indigo-600 mb-1">
+          Laporan Hasil Evaluasi
+        </p>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">
+          Prediksi Ujian Koperasi, E-Commerce &amp; Literasi Finansial
+        </h2>
+        <p class="text-sm sm:text-base text-slate-600 mt-1">
+          Nama Peserta: <span id="resultPlayerName" class="font-bold text-slate-900">-</span>
+        </p>
+
+        <div class="my-6 inline-flex flex-col items-center justify-center w-40 h-40 rounded-full bg-indigo-50 border-4 border-indigo-600">
+          <span class="text-xs font-semibold uppercase tracking-wider text-indigo-700">Skor Akhir</span>
+          <span id="finalScoreDisplay" class="text-4xl font-extrabold font-mono text-indigo-950 mt-1">0</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 max-w-lg mx-auto text-center">
+          <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <p class="text-xs font-semibold text-emerald-800">Jawaban Benar</p>
+            <p id="correctCountDisplay" class="text-xl font-extrabold font-mono text-emerald-700 mt-0.5">0</p>
+          </div>
+          <div class="p-3 rounded-xl bg-rose-50 border border-rose-200">
+            <p class="text-xs font-semibold text-rose-800">Jawaban Salah</p>
+            <p id="wrongCountDisplay" class="text-xl font-extrabold font-mono text-rose-700 mt-0.5">0</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-100 border border-slate-200">
+            <p class="text-xs font-semibold text-slate-700">Total Soal</p>
+            <p id="totalCountDisplay" class="text-xl font-extrabold font-mono text-slate-900 mt-0.5">30</p>
+          </div>
+        </div>
+
+        <div class="mt-7">
+          <button
+            type="button"
+            id="restartQuizBtn"
+            class="py-3.5 px-7 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-md transition cursor-pointer"
+          >
+            Mulai Ulang Kuis Baru
+          </button>
+        </div>
+      </div>
+
+      <!-- Daftar Review Setiap Soal -->
+      <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 p-6 sm:p-8">
+        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-4">
+          Review Jawaban Seluruh Soal
+        </h3>
+        <div id="reviewListContainer" class="space-y-4"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /**
+     * Bank 30 Soal Prediksi Ujian berdasarkan dokumen PDF:
+     * Koperasi, Sejarah & Landasan, Prinsip, Perangkat, Tingkatan/Jenis/Modal,
+     * E-Commerce & Model Bisnis, Sistem & Alat Pembayaran Modern, Fintech, OJK,
+     * Uang Elektronik & Dompet Digital, serta Literasi Finansial.
+     * Aturan:
+     * - Masing-masing 4 pilihan jawaban.
+     * - Tidak ada tanda kurung () di dalam teks pilihan jawaban.
+     * - Pengecoh dirancang realistis dan menuntut ketelitian konsep.
+     */
+    const QUESTION_BANK = [
+      {
+        category: "Sejarah Koperasi",
+        question: "Tokoh yang mendirikan Bank Penolong dan Tabungan bersama E. Sieburg untuk membantu anggota agar tidak terjerat utang rentenir adalah...",
+        options: [
+          "Raden Aria Wirjaatmadja",
+          "Mohammad Hatta",
+          "Soeria Atmadja",
+          "Darmono Prawirohardjo"
+        ],
+        answer: "Raden Aria Wirjaatmadja"
+      },
+      {
+        category: "Sejarah Koperasi",
+        question: "Kongres koperasi pertama di Indonesia yang menetapkan tanggal 12 Juli sebagai Hari Koperasi diselenggarakan di kota...",
+        options: [
+          "Tasikmalaya",
+          "Bandung",
+          "Yogyakarta",
+          "Solo"
+        ],
+        answer: "Tasikmalaya"
+      },
+      {
+        category: "Sejarah Koperasi",
+        question: "Kongres koperasi kedua yang menetapkan Mohammad Hatta sebagai Bapak Koperasi Indonesia berlangsung pada tahun...",
+        options: [
+          "1953",
+          "1947",
+          "1967",
+          "1992"
+        ],
+        answer: "1953"
+      },
+      {
+        category: "Landasan Koperasi",
+        question: "Pasal 33 ayat 1 Undang-Undang Dasar 1945 berkedudukan sebagai landasan koperasi Indonesia yang bersifat...",
+        options: [
+          "Landasan struktural",
+          "Landasan ideal",
+          "Landasan operasional",
+          "Landasan mental"
+        ],
+        answer: "Landasan struktural"
+      },
+      {
+        category: "Landasan Koperasi",
+        question: "Kesetiakawanan dan kesadaran pribadi dalam berkoperasi merupakan perwujudan dari...",
+        options: [
+          "Landasan mental",
+          "Landasan operasional",
+          "Landasan struktural",
+          "Asas gotong royong"
+        ],
+        answer: "Landasan mental"
+      },
+      {
+        category: "Pengertian & Asas Koperasi",
+        question: "Berdasarkan Undang-Undang Nomor 25 Tahun 1992, koperasi merupakan gerakan ekonomi rakyat yang berdasar atas asas...",
+        options: [
+          "Kekeluargaan",
+          "Kerakyatan",
+          "Keadilan sosial",
+          "Kemufakatan bersama"
+        ],
+        answer: "Kekeluargaan"
+      },
+      {
+        category: "Perangkat Organisasi Koperasi",
+        question: "Menurut Undang-Undang Nomor 25 Tahun 1992 Pasal 21, salah satu perangkat organisasi koperasi yang bukan pengurus maupun pengawas adalah...",
+        options: [
+          "Rapat Anggota",
+          "Dewan Penasihat",
+          "Komite Audit",
+          "Badan Pemeriksa"
+        ],
+        answer: "Rapat Anggota"
+      },
+      {
+        category: "Prinsip Koperasi",
+        question: "Pembagian sisa hasil usaha koperasi dilakukan secara adil sebanding dengan...",
+        options: [
+          "Besarnya jasa usaha masing-masing anggota",
+          "Lamanya seseorang terdaftar sebagai anggota",
+          "Jumlah simpanan pokok yang disetorkan awal",
+          "Tingkat jabatan dalam struktur organisasi"
+        ],
+        answer: "Besarnya jasa usaha masing-masing anggota"
+      },
+      {
+        category: "Prinsip Koperasi",
+        question: "Koperasi merupakan badan usaha swadaya yang otonom dan independen mencerminkan prinsip...",
+        options: [
+          "Kemandirian",
+          "Keanggotaan terbuka",
+          "Pengelolaan demokratis",
+          "Partisipasi ekonomi"
+        ],
+        answer: "Kemandirian"
+      },
+      {
+        category: "Tingkatan Koperasi",
+        question: "Koperasi pusat yang berkedudukan di ibu kota kabupaten atau kota merupakan gabungan dari paling sedikit...",
+        options: [
+          "5 koperasi primer",
+          "3 koperasi gabungan",
+          "3 koperasi primer",
+          "20 orang anggota"
+        ],
+        answer: "5 koperasi primer"
+      },
+      {
+        category: "Tingkatan Koperasi",
+        question: "Koperasi induk yang berkedudukan di ibu kota negara merupakan gabungan paling sedikit dari...",
+        options: [
+          "3 koperasi gabungan",
+          "5 koperasi gabungan",
+          "3 koperasi pusat",
+          "5 koperasi pusat"
+        ],
+        answer: "3 koperasi gabungan"
+      },
+      {
+        category: "Jenis Koperasi",
+        question: "Koperasi yang menjalankan beberapa macam bidang usaha sekaligus seperti KUD tergolong ke dalam koperasi...",
+        options: [
+          "Multi purpose",
+          "Single purpose",
+          "Koperasi fungsional",
+          "Koperasi pemasaran"
+        ],
+        answer: "Multi purpose"
+      },
+      {
+        category: "Sumber Modal Koperasi",
+        question: "Simpanan yang wajib dibayarkan saat pertama kali masuk menjadi anggota dan besarnya sama untuk setiap anggota disebut...",
+        options: [
+          "Simpanan pokok",
+          "Simpanan wajib",
+          "Simpanan sukarela",
+          "Dana cadangan"
+        ],
+        answer: "Simpanan pokok"
+      },
+      {
+        category: "Sumber Modal Koperasi",
+        question: "Bagian modal sendiri yang berasal dari penyisihan sisa hasil usaha untuk memupuk modal dan menutup kerugian bila diperlukan adalah...",
+        options: [
+          "Dana cadangan",
+          "Hibah",
+          "Simpanan wajib",
+          "Pinjaman koperasi lain"
+        ],
+        answer: "Dana cadangan"
+      },
+      {
+        category: "Sumber Modal Koperasi",
+        question: "Sumber modal koperasi yang besarnya tidak ditentukan dan dapat diambil kapan saja oleh anggota termasuk dalam kelompok...",
+        options: [
+          "Modal pinjaman",
+          "Modal sendiri",
+          "Dana cadangan",
+          "Hibah anggota"
+        ],
+        answer: "Modal pinjaman"
+      },
+      {
+        category: "Model Bisnis E-Commerce",
+        question: "Transaksi yang melibatkan pasokan bahan baku dalam jumlah besar antarperusahaan dengan target pasar kelompok usaha lain disebut...",
+        options: [
+          "Business to business",
+          "Business to consumer",
+          "Consumer to business",
+          "Business to government"
+        ],
+        answer: "Business to business"
+      },
+      {
+        category: "Model Bisnis E-Commerce",
+        question: "Pekerja lepas yang menawarkan keahlian jasanya kepada perusahaan melalui platform penyedia kerja menggambarkan model...",
+        options: [
+          "Consumer to business",
+          "Consumer to consumer",
+          "Business to consumer",
+          "Government to consumer"
+        ],
+        answer: "Consumer to business"
+      },
+      {
+        category: "Model Bisnis E-Commerce",
+        question: "Pengadaan barang bagi instansi pemerintah melalui sistem katalog elektronik atau penyediaan layanan digital swasta untuk pemerintah termasuk...",
+        options: [
+          "Business to government",
+          "Government to consumer",
+          "Business to business",
+          "Consumer to business"
+        ],
+        answer: "Business to government"
+      },
+      {
+        category: "Model Bisnis E-Commerce",
+        question: "Pembayaran pajak daring melalui situs resmi Direktorat Jenderal Pajak atau pembuatan paspor secara daring merupakan contoh dari...",
+        options: [
+          "Government to consumer",
+          "Business to government",
+          "Business to consumer",
+          "Consumer to consumer"
+        ],
+        answer: "Government to consumer"
+      },
+      {
+        category: "E-Commerce di Indonesia",
+        question: "Salah satu karakteristik utama pelaku usaha perdagangan daring di Indonesia berdasarkan materi adalah...",
+        options: [
+          "Mayoritas menggunakan pesan instan dan media sosial sebagai media penjualan",
+          "Mayoritas memiliki total nilai pendapatan di atas satu miliar rupiah",
+          "Metode pembayaran paling sering menggunakan transfer antarbank internasional",
+          "Seluruh transaksi mewajibkan pembayaran kartu kredit sebelum pengiriman"
+        ],
+        answer: "Mayoritas menggunakan pesan instan dan media sosial sebagai media penjualan"
+      },
+      {
+        category: "Regulasi E-Commerce",
+        question: "Peraturan pemerintah yang mengatur perdagangan melalui sistem elektronik di Indonesia adalah...",
+        options: [
+          "PP Nomor 80 Tahun 2019",
+          "PP Nomor 25 Tahun 1992",
+          "PP Nomor 12 Tahun 1967",
+          "PP Nomor 31 Tahun 2023"
+        ],
+        answer: "PP Nomor 80 Tahun 2019"
+      },
+      {
+        category: "Sistem Pembayaran",
+        question: "Komponen sistem pembayaran yang memiliki wewenang menetapkan aturan, ketentuan, dan kebijakan mengikat bagi seluruh komponen adalah...",
+        options: [
+          "Regulator",
+          "Penyelenggara",
+          "Infrastruktur",
+          "Instrumen"
+        ],
+        answer: "Regulator"
+      },
+      {
+        category: "Sistem Pembayaran",
+        question: "Sarana fisik yang memberikan dukungan operasional bagi berjalannya sistem pembayaran merupakan pengertian dari...",
+        options: [
+          "Infrastruktur",
+          "Penyelenggara",
+          "Instrumen",
+          "Regulator"
+        ],
+        answer: "Infrastruktur"
+      },
+      {
+        category: "Alat Pembayaran Non Tunai",
+        question: "Mekanisme pemindahan dana antarbank untuk pemindahbukuan dana lokal maupun lintas wilayah secara seketika disebut...",
+        options: [
+          "Real Time Gross Settlement Systems",
+          "Sistem kliring berbasis warkat",
+          "Alat pembayaran berbasis warkat",
+          "Pendebetan langsung"
+        ],
+        answer: "Real Time Gross Settlement Systems"
+      },
+      {
+        category: "Alat Pembayaran Non Tunai",
+        question: "Giro dan pos wesel merupakan instrumen sistem pembayaran yang disediakan oleh...",
+        options: [
+          "PT Pos Indonesia",
+          "Bank Indonesia",
+          "Otoritas Jasa Keuangan",
+          "Lembaga Penjamin Simpanan"
+        ],
+        answer: "PT Pos Indonesia"
+      },
+      {
+        category: "Teknologi Finansial & OJK",
+        question: "Lembaga yang memegang peranan penting dalam pengawasan pelaksanaan teknologi finansial di Indonesia bersama Bank Indonesia adalah...",
+        options: [
+          "Otoritas Jasa Keuangan",
+          "Kementerian Koperasi dan UKM",
+          "Lembaga Kebijakan Pengadaan Barang Jasa Pemerintah",
+          "Direktorat Jenderal Pajak"
+        ],
+        answer: "Otoritas Jasa Keuangan"
+      },
+      {
+        category: "Uang Elektronik & Dompet Digital",
+        question: "Perbedaan utama uang elektronik berbentuk kartu dibandingkan dompet digital berbasis peladen berdasarkan materi adalah...",
+        options: [
+          "Batas saldo maksimal kartu satu juta rupiah sedangkan dompet digital bisa mencapai sepuluh juta rupiah",
+          "Uang elektronik kartu wajib terhubung ke peladen penerbit setiap kali bertransaksi",
+          "Dompet digital hanya dapat dipakai untuk membayar tol dan transportasi publik",
+          "Uang elektronik kartu selalu memiliki fitur pin dan aktivasi nomor ponsel"
+        ],
+        answer: "Batas saldo maksimal kartu satu juta rupiah sedangkan dompet digital bisa mencapai sepuluh juta rupiah"
+      },
+      {
+        category: "Tingkatan Literasi Finansial",
+        question: "Tingkatan literasi keuangan ketika seseorang memiliki pengetahuan dan keyakinan tentang produk jasa keuangan serta memiliki keterampilan menggunakannya disebut...",
+        options: [
+          "Well Literate",
+          "Sufficient Literate",
+          "Less Literate",
+          "Not Literate"
+        ],
+        answer: "Well Literate"
+      },
+      {
+        category: "Tingkatan Literasi Finansial",
+        question: "Calon konsumen atau pelaku UMKM yang sudah mengetahui informasi dasar produk keuangan namun belum yakin cara mengelola dan menggunakannya berada pada tingkat...",
+        options: [
+          "Sufficient Literate",
+          "Well Literate",
+          "Less Literate",
+          "Not Literate"
+        ],
+        answer: "Sufficient Literate"
+      },
+      {
+        category: "Cakupan Literasi Finansial",
+        question: "Penghasilan yang sudah dikurangi oleh biaya-biaya yang ditetapkan seperti pajak dan asuransi disebut...",
+        options: [
+          "Penghasilan bersih",
+          "Penghasilan kotor",
+          "Alokasi berbagi",
+          "Dana cadangan"
+        ],
+        answer: "Penghasilan bersih"
+      }
+    ];
+
+    // Variabel State Aplikasi
+    const state = {
+      playerName: "",
+      durationPerQuestion: 30,
+      questions: [],
+      currentIndex: 0,
+      scoreCount: 0,
+      timeLeft: 30,
+      timerId: null,
+      answeredCurrent: false,
+      reviews: []
+    };
+
+    // Referensi Elemen DOM
+    const el = {
+      messageBox: document.getElementById("messageBox"),
+      setupScreen: document.getElementById("setupScreen"),
+      quizScreen: document.getElementById("quizScreen"),
+      resultScreen: document.getElementById("resultScreen"),
+      playerNameInput: document.getElementById("playerNameInput"),
+      durationButtons: document.querySelectorAll(".duration-btn"),
+      startQuizBtn: document.getElementById("startQuizBtn"),
+      activePlayerDisplay: document.getElementById("activePlayerDisplay"),
+      questionCounterDisplay: document.getElementById("questionCounterDisplay"),
+      timerDisplay: document.getElementById("timerDisplay"),
+      timerBar: document.getElementById("timerBar"),
+      questionCategoryBadge: document.getElementById("questionCategoryBadge"),
+      questionText: document.getElementById("questionText"),
+      optionsContainer: document.getElementById("optionsContainer"),
+      feedbackBanner: document.getElementById("feedbackBanner"),
+      nextActionContainer: document.getElementById("nextActionContainer"),
+      nextQuestionBtn: document.getElementById("nextQuestionBtn"),
+      resultPlayerName: document.getElementById("resultPlayerName"),
+      finalScoreDisplay: document.getElementById("finalScoreDisplay"),
+      correctCountDisplay: document.getElementById("correctCountDisplay"),
+      wrongCountDisplay: document.getElementById("wrongCountDisplay"),
+      totalCountDisplay: document.getElementById("totalCountDisplay"),
+      reviewListContainer: document.getElementById("reviewListContainer"),
+      restartQuizBtn: document.getElementById("restartQuizBtn")
+    };
+
+    /**
+     * Menampilkan pesan notifikasi ramah pengguna tanpa alert()
+     */
+    function showMessage(text, type = "error") {
+      el.messageBox.textContent = text;
+      el.messageBox.classList.remove("hidden", "bg-rose-50", "border-rose-300", "text-rose-800", "bg-emerald-50", "border-emerald-300", "text-emerald-800");
+      if (type === "error") {
+        el.messageBox.classList.add("bg-rose-50", "border-rose-300", "text-rose-800");
+      } else {
+        el.messageBox.classList.add("bg-emerald-50", "border-emerald-300", "text-emerald-800");
+      }
+    }
+
+    function hideMessage() {
+      el.messageBox.classList.add("hidden");
+    }
+
+    /**
+     * Algoritma Fisher-Yates untuk mengacak urutan array secara merata
+     */
+    function shuffleArray(sourceArray) {
+      const arr = [...sourceArray];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /**
+     * Memicu efek confetti perayaan saat jawaban benar dipilih
+     */
+    function triggerCelebrationConfetti() {
+      try {
+        if (typeof confetti === "function") {
+          confetti({
+            particleCount: 75,
+            spread: 65,
+            origin: { y: 0.65 }
+          });
+        }
+      } catch (err) {
+        // Mengabaikan error jika pustaka confetti tidak tersedia secara offline
+      }
+    }
+
+    /**
+     * Mengatur pilihan tombol durasi (15, 30, 45 detik)
+     */
+    function setupDurationSelection() {
+      el.durationButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const val = parseInt(btn.getAttribute("data-duration"), 10);
+          state.durationPerQuestion = val;
+
+          el.durationButtons.forEach((b) => {
+            b.classList.remove("border-indigo-600", "bg-indigo-50", "text-indigo-900");
+            b.classList.add("border-slate-200", "bg-slate-50", "text-slate-700");
+          });
+
+          btn.classList.remove("border-slate-200", "bg-slate-50", "text-slate-700");
+          btn.classList.add("border-indigo-600", "bg-indigo-50", "text-indigo-900");
+        });
+      });
+    }
+
+    /**
+     * Memulai sesi kuis baru dengan soal dan pilihan jawaban yang diacak
+     */
+    function startNewQuiz() {
+      try {
+        hideMessage();
+        const rawName = el.playerNameInput.value.trim();
+        if (!rawName) {
+          showMessage("Silakan masukkan nama pemain kuis terlebih dahulu sebelum memulai.", "error");
+          el.playerNameInput.focus();
+          return;
+        }
+
+        state.playerName = rawName;
+        state.currentIndex = 0;
+        state.scoreCount = 0;
+        state.reviews = [];
+
+        // Mengacak urutan seluruh 30 soal dan mengacak pilihan jawaban tiap soal
+        state.questions = shuffleArray(QUESTION_BANK).map((item) => ({
+          ...item,
+          shuffledOptions: shuffleArray(item.options)
+        }));
+
+        el.setupScreen.classList.add("hidden");
+        el.resultScreen.classList.add("hidden");
+        el.quizScreen.classList.remove("hidden");
+        el.activePlayerDisplay.textContent = state.playerName;
+
+        renderQuestion();
+      } catch (error) {
+        showMessage("Terjadi kesalahan saat memulai kuis. Silakan muat ulang halaman.", "error");
+      }
+    }
+
+    /**
+     * Menghentikan interval timer aktif
+     */
+    function clearActiveTimer() {
+      if (state.timerId !== null) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+    }
+
+    /**
+     * Memulai hitungan mundur untuk soal saat ini
+     */
+    function startQuestionTimer() {
+      clearActiveTimer();
+      state.timeLeft = state.durationPerQuestion;
+      updateTimerVisual();
+
+      state.timerId = setInterval(() => {
+        state.timeLeft -= 1;
+        updateTimerVisual();
+
+        if (state.timeLeft <= 0) {
+          clearActiveTimer();
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    /**
+     * Memperbarui angka dan lebar bar hitungan mundur
+     */
+    function updateTimerVisual() {
+      const safeTime = Math.max(0, state.timeLeft);
+      el.timerDisplay.textContent = `${safeTime}s`;
+
+      const percentage = (safeTime / state.durationPerQuestion) * 100;
+      el.timerBar.style.width = `${percentage}%`;
+
+      el.timerDisplay.classList.remove("text-emerald-400", "text-amber-400", "text-rose-400");
+      el.timerBar.classList.remove("bg-emerald-500", "bg-amber-500", "bg-rose-500");
+
+      if (percentage > 50) {
+        el.timerDisplay.classList.add("text-emerald-400");
+        el.timerBar.classList.add("bg-emerald-500");
+      } else if (percentage > 25) {
+        el.timerDisplay.classList.add("text-amber-400");
+        el.timerBar.classList.add("bg-amber-500");
+      } else {
+        el.timerDisplay.classList.add("text-rose-400");
+        el.timerBar.classList.add("bg-rose-500");
+      }
+    }
+
+    /**
+     * Menampilkan pertanyaan dan 4 tombol pilihan jawaban
+     */
+    function renderQuestion() {
+      state.answeredCurrent = false;
+      const currentQ = state.questions[state.currentIndex];
+      const totalQ = state.questions.length;
+
+      el.questionCounterDisplay.textContent = `Soal ${state.currentIndex + 1} / ${totalQ}`;
+      el.questionCategoryBadge.textContent = currentQ.category;
+      el.questionText.textContent = currentQ.question;
+
+      el.feedbackBanner.classList.add("hidden");
+      el.nextActionContainer.classList.add("hidden");
+      el.optionsContainer.innerHTML = "";
+
+      const labels = ["A", "B", "C", "D"];
+
+      currentQ.shuffledOptions.forEach((optionText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn w-full text-left px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl flex items-start gap-3.5 cursor-pointer";
+        btn.setAttribute("data-option", optionText);
+
+        const badge = document.createElement("span");
+        badge.className = "font-mono text-xs sm:text-sm font-bold px-2.5 py-1 rounded-lg bg-white text-slate-800 border border-slate-300 shrink-0 mt-0.5";
+        badge.textContent = labels[idx];
+
+        const textSpan = document.createElement("span");
+        textSpan.className = "text-sm sm:text-base leading-relaxed";
+        textSpan.textContent = optionText;
+
+        btn.appendChild(badge);
+        btn.appendChild(textSpan);
+
+        btn.addEventListener("click", () => handleSelectOption(optionText, btn));
+        el.optionsContainer.appendChild(btn);
+      });
+
+      el.nextQuestionBtn.textContent =
+        state.currentIndex === totalQ - 1 ? "Lihat Hasil & Review" : "Soal Berikutnya";
+
+      startQuestionTimer();
+    }
+
+    /**
+     * Menangani aksi saat pemain memilih salah satu jawaban
+     */
+    function handleSelectOption(selectedOption, clickedButton) {
+      if (state.answeredCurrent) return;
+      state.answeredCurrent = true;
+      clearActiveTimer();
+
+      const currentQ = state.questions[state.currentIndex];
+      const isCorrect = selectedOption === currentQ.answer;
+      const allOptionButtons = el.optionsContainer.querySelectorAll(".option-btn");
+
+      allOptionButtons.forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.remove("cursor-pointer");
+        const optVal = btn.getAttribute("data-option");
+        if (optVal === currentQ.answer) {
+          btn.classList.add("option-correct");
+        }
+      });
+
+      if (isCorrect) {
+        clickedButton.classList.add("option-correct");
+        state.scoreCount += 1;
+        showFeedback("Jawaban Benar! Bagus sekali.", "correct");
+        triggerCelebrationConfetti();
+      } else {
+        clickedButton.classList.add("option-wrong");
+        showFeedback(`Jawaban Salah. Jawaban yang benar adalah: ${currentQ.answer}`, "wrong");
+      }
+
+      state.reviews.push({
+        number: state.currentIndex + 1,
+        category: currentQ.category,
+        question: currentQ.question,
+        correctAnswer: currentQ.answer,
+        userAnswer: selectedOption,
+        isCorrect: isCorrect,
+        timedOut: false
+      });
+
+      el.nextActionContainer.classList.remove("hidden");
+    }
+
+    /**
+     * Menangani kondisi ketika waktu hitungan mundur habis (0 detik)
+     */
+    function handleTimeOut() {
+      if (state.answeredCurrent) return;
+      state.answeredCurrent = true;
+
+      const currentQ = state.questions[state.currentIndex];
+      const allOptionButtons = el.optionsContainer.querySelectorAll(".option-btn");
+
+      allOptionButtons.forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.remove("cursor-pointer");
+        const optVal = btn.getAttribute("data-option");
+        if (optVal === currentQ.answer) {
+          btn.classList.add("option-correct");
+        }
+      });
+
+      showFeedback(`Waktu Habis! Jawaban yang benar adalah: ${currentQ.answer}`, "timeout");
+
+      state.reviews.push({
+        number: state.currentIndex + 1,
+        category: currentQ.category,
+        question: currentQ.question,
+        correctAnswer: currentQ.answer,
+        userAnswer: "Tidak menjawab (Waktu habis)",
+        isCorrect: false,
+        timedOut: true
+      });
+
+      el.nextActionContainer.classList.remove("hidden");
+    }
+
+    /**
+     * Menampilkan banner umpan balik di bawah pilihan jawaban
+     */
+    function showFeedback(message, status) {
+      el.feedbackBanner.textContent = message;
+      el.feedbackBanner.classList.remove(
+        "hidden",
+        "bg-emerald-50",
+        "border-emerald-300",
+        "text-emerald-900",
+        "bg-rose-50",
+        "border-rose-300",
+        "text-rose-900",
+        "bg-amber-50",
+        "border-amber-300",
+        "text-amber-900"
+      );
+
+      if (status === "correct") {
+        el.feedbackBanner.classList.add("bg-emerald-50", "border-emerald-300", "text-emerald-900");
+      } else if (status === "wrong") {
+        el.feedbackBanner.classList.add("bg-rose-50", "border-rose-300", "text-rose-900");
+      } else {
+        el.feedbackBanner.classList.add("bg-amber-50", "border-amber-300", "text-amber-900");
+      }
+    }
+
+    /**
+     * Melanjutkan ke soal berikutnya atau menampilkan halaman hasil akhir
+     */
+    function goToNextQuestion() {
+      if (state.currentIndex < state.questions.length - 1) {
+        state.currentIndex += 1;
+        renderQuestion();
+      } else {
+        renderResultScreen();
+      }
+    }
+
+    /**
+     * Menghitung skor akhir dengan rumus (jumlah benar / total soal) * 100 dan merender review lengkap
+     */
+    function renderResultScreen() {
+      clearActiveTimer();
+      el.quizScreen.classList.add("hidden");
+      el.resultScreen.classList.remove("hidden");
+
+      const totalQuestions = state.questions.length;
+      const correctCount = state.scoreCount;
+      const wrongCount = totalQuestions - correctCount;
+      const rawScore = (correctCount / totalQuestions) * 100;
+      const formattedScore = Number.isInteger(rawScore) ? String(rawScore) : rawScore.toFixed(2);
+
+      el.resultPlayerName.textContent = state.playerName;
+      el.finalScoreDisplay.textContent = formattedScore;
+      el.correctCountDisplay.textContent = String(correctCount);
+      el.wrongCountDisplay.textContent = String(wrongCount);
+      el.totalCountDisplay.textContent = String(totalQuestions);
+
+      el.reviewListContainer.innerHTML = "";
+
+      state.reviews.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = `p-4 sm:p-5 rounded-xl border ${
+          item.isCorrect ? "bg-emerald-50/50 border-emerald-200" : "bg-rose-50/40 border-rose-200"
+        }`;
+
+        const topRow = document.createElement("div");
+        topRow.className = "flex flex-wrap items-center justify-between gap-2 mb-2";
+
+        const qLabel = document.createElement("span");
+        qLabel.className = "text-xs font-bold uppercase tracking-wider text-slate-500";
+        qLabel.textContent = `Soal ${item.number} • ${item.category}`;
+
+        const statusBadge = document.createElement("span");
+        statusBadge.className = `text-xs font-bold px-2.5 py-1 rounded-full ${
+          item.isCorrect
+            ? "bg-emerald-100 text-emerald-800"
+            : item.timedOut
+            ? "bg-amber-100 text-amber-800"
+            : "bg-rose-100 text-rose-800"
+        }`;
+        statusBadge.textContent = item.isCorrect ? "Benar" : item.timedOut ? "Waktu Habis" : "Salah";
+
+        topRow.appendChild(qLabel);
+        topRow.appendChild(statusBadge);
+
+        const qText = document.createElement("p");
+        qText.className = "font-semibold text-slate-900 text-sm sm:text-base mb-3";
+        qText.textContent = item.question;
+
+        const detailGrid = document.createElement("div");
+        detailGrid.className = "space-y-1.5 text-xs sm:text-sm";
+
+        const userAnsRow = document.createElement("p");
+        userAnsRow.innerHTML = `<span class="font-semibold text-slate-700">Jawaban Anda:</span> <span class="font-medium ${
+          item.isCorrect ? "text-emerald-700" : "text-rose-700"
+        }"></span>`;
+        userAnsRow.lastChild.textContent = item.userAnswer;
+
+        const correctAnsRow = document.createElement("p");
+        correctAnsRow.innerHTML = `<span class="font-semibold text-slate-700">Jawaban Benar:</span> <span class="font-semibold text-emerald-800"></span>`;
+        correctAnsRow.lastChild.textContent = item.correctAnswer;
+
+        detailGrid.appendChild(userAnsRow);
+        detailGrid.appendChild(correctAnsRow);
+
+        card.appendChild(topRow);
+        card.appendChild(qText);
+        card.appendChild(detailGrid);
+
+        el.reviewListContainer.appendChild(card);
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    /**
+     * Mengembalikan aplikasi ke layar pengaturan untuk memulai kuis baru
+     */
+    function resetToSetup() {
+      clearActiveTimer();
+      hideMessage();
+      el.resultScreen.classList.add("hidden");
+      el.quizScreen.classList.add("hidden");
+      el.setupScreen.classList.remove("hidden");
+      el.playerNameInput.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Inisialisasi Event Listener
+    window.addEventListener("DOMContentLoaded", () => {
+      setupDurationSelection();
+      el.startQuizBtn.addEventListener("click", startNewQuiz);
+      el.nextQuestionBtn.addEventListener("click", goToNextQuestion);
+      el.restartQuizBtn.addEventListener("click", resetToSetup);
+
+      el.playerNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          startNewQuiz();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
